@@ -38,7 +38,15 @@ try
 		
 		echo 'Added';
 	}
-	
+	if(isset($_POST["answerStats"] && isset($_POST["settings"])){
+	    $answerStats = json_decode($_POST["answerStats"],true);
+	    
+      $req = $bdd->prepare('INSERT INTO Words() VALUES()');
+		
+		foreach($answerStats as $word){
+		    $req->execute($word);
+		}
+	}
 	// To Update
 	$userID = 1;
 	//
