@@ -38,26 +38,27 @@ try
 		
 		echo 'Added';
 	}
-	if(isset($_POST["answerStats"] && isset($_POST["settings"])){
-	    $answerStats = json_decode($_POST["answerStats"],true);
-	    
-	    // insert update
-      $req = $bdd->prepare('INSERT INTO Answers() VALUES(Q_Lang, A_Lang, TP,TN, FP, FN  :score,score_1,score_2,:score+score_1*0.4+score_2*0.2, NOW()');
-		
-		foreach($answerStats as $word){
-		    $req->execute($word);
-		}
-	}
 	// To Update
 	$userID = 1;
 	//
+	$G_Lang = "fr";
+	$L_Lang = "mn";
+	if(isset($_POST["G_Lang"]))
+	    $G_Lang = $_POST["G_Lang"];
+	if(isset($_POST["L_Lang"]))
+	    $L_Lang = $_POST["L_Lang"];
+	
+	if(isset($_POST["answerStats"],$_POST["settings"])){
+	    $answerStats = json_decode($_POST["answerStats"],true);
+	    
+	    // insert update
+		$req = $bdd->prepare('INSERT INTO Answers(USER, WORD, LANG, DATE) VALUES(:userID, :wordID, :Lang, NOW()) ON DUPLICATE KEY UPDATE TRUE_POS = VALUES(TRUE_POS) + :TP, TRUE_NEG = VALUES(TRUE_NEG) + :TN, FALSE_POS = VALUES(FALSE_POS) + :FP, FALSE_NEG = VALUES(FALSE_NEG) + :FN, SCORE_1 = :score, SCORE_2 = VALUES(SCORE_1), SCORE_3 = VALUES(SCORE_2), SCORE = :score*0.6+VALUES(SCORE_1)*0.4+VALUES(SCORE_2)*0.2, DATE = NOW()');
 		
-	$Q_Lang = "fr";
-	$A_Lang = "mn";
-	if(isset($_POST["Q_Lang"]))
-	    $Q_Lang = $_POST["Q_Lang"];
-	if(isset($_POST["A_Lang"]))
-	    $A_Lang = $_POST["A_Lang"];
+		foreach($answerStats as $wordID => $stat){
+			$answer = ["userID" => $userID, "Lang" => $L_Lang, "wordID" => $wordID, "TP" => $stat[0],  "TN" => $stat[1], "FP" => $stat[2], "FN" => $stat[3], "score" => $stat[4]];
+		    $req->execute($answer);
+		}
+	}
 
 	$req = $bdd->prepare('SELECT CODE, LANGUAGE FROM Language');
 	$req->execute();
@@ -67,7 +68,7 @@ try
         $LangList[$lang["CODE"]] = $lang["LANGUAGE"];
 
 // join Answer
-	$reqWords = $bdd->prepare('SELECT ID,'.$Q_Lang.','.$A_Lang.' FROM Words w INNER JOIN Answer a ON w.ID = a.wordID AND ORDER BY score LIMIT 20'); // RAND()
+	$reqWords = $bdd->prepare('SELECT ID, '.$L_Lang.', '.$G_Lang.' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20'); // RAND() INNER JOIN
 	$reqWords->execute();
 	
 	$arr = [];
@@ -77,13 +78,13 @@ try
 	
 <form action="/vocLearn.php" method="post">
 
- <label for="Q_Lang">Language of the game:</label>
+ <label for="G_Lang">Language of the game:</label>
 
-<select name="Q_Lang" id="Q_Lang">
+<select name="G_Lang" id="G_Lang">
 <?php 
 	
 	foreach($LangList as $code => $language){
-		echo "<option value=\"".$code."\"".($code == $Q_Lang? " selected" : "").">".$language."</option>";
+		echo "<option value=\"".$code."\"".($code == $G_Lang? " selected" : "").">".$language."</option>";
 	}
 ?>
   
@@ -91,12 +92,12 @@ try
 
 <br/>
 
- <label for="A_Lang">Language to learn:</label>
+ <label for="L_Lang">Language to learn:</label>
 
-<select name="A_Lang" id="A_Lang">
+<select name="L_Lang" id="L_Lang">
 <?php 
 	foreach($LangList as $code => $language){
-		echo "<option value=\"".$code."\"".($code == $A_Lang? " selected" : "").">".$language."</option>";
+		echo "<option value=\"".$code."\"".($code == $L_Lang? " selected" : "").">".$language."</option>";
 
 	}
 ?>
@@ -133,13 +134,13 @@ try
 	
 	while ($data = $reqWords->fetch())
 	{
-		$arr[]= [$data[$A_Lang],$data[$Q_Lang]];
+		$arr[]= [$data[$L_Lang],$data[$G_Lang],$data["ID"]];
 		$wordList[] = $data["ID"];
 		$answerStats[$data["ID"]] = [0,0,0,0,-1];
 	}
 
 	echo 'var wordList ='.json_encode($arr).";";
-	echo 'var answerStats ='.json_encode($answerSta                    ts).";";
+	echo 'var answerStats ='.json_encode($answerStats).";";
 	
 	/*
 	echo "\n";
@@ -226,21 +227,23 @@ displayMCQ();
 
 $( "button" ).click(function() {
   //$( "#target" ).click();
+  var clk = 3-idx.indexOf(Number(this.id.slice(-1)));
   if(this.id==mcq.ans){
     $("#dbg").text("Good");
+	answerStats[wordList[arr_mcq[clk]][2]][0]++;
     setTimeout(function(){$("#dbg").text("");
                          mcq = generateMCQ(wordList);
                          displayMCQ();
                          $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx + "\n");
-                          // send arr_mcq OK + ID // TP TN TN TN
+                          // send arr_mcq OK + ID // TP TN FP FN
                          }, 1000);
   }else{
-    var clk = 3-idx.indexOf(Number(this.id.slice(-1)));
     // arr_mcq[clk] => FP, arr_mcq[0] => FN, others TN
     $("#dbg").text("wrong " + idx+ " " +idx.indexOf(3)+" "+arr_mcq[clk]+ " " + wordList[arr_mcq[clk]]);
+	answerStats[wordList[arr_mcq[clk]][2]][2]++; //TODO
   // send arr_mcq OK + ID // FN
 
-}
+  }
 });
 
 /*
