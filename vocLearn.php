@@ -41,7 +41,8 @@ try
 	if(isset($_POST["answerStats"] && isset($_POST["settings"])){
 	    $answerStats = json_decode($_POST["answerStats"],true);
 	    
-      $req = $bdd->prepare('INSERT INTO Words() VALUES()');
+	    // insert update
+      $req = $bdd->prepare('INSERT INTO Answers() VALUES(Q_Lang, A_Lang, TP,TN, FP, FN  :score,score_1,score_2,:score+score_1*0.4+score_2*0.2, NOW()');
 		
 		foreach($answerStats as $word){
 		    $req->execute($word);
@@ -65,8 +66,8 @@ try
     while ($lang = $req->fetch())
         $LangList[$lang["CODE"]] = $lang["LANGUAGE"];
 
-
-	$reqWords = $bdd->prepare('SELECT ID,'.$Q_Lang.','.$A_Lang.' FROM Words ORDER BY RAND() LIMIT 20');
+// join Answer
+	$reqWords = $bdd->prepare('SELECT ID,'.$Q_Lang.','.$A_Lang.' FROM Words w INNER JOIN Answer a ON w.ID = a.wordID AND ORDER BY score LIMIT 20'); // RAND()
 	$reqWords->execute();
 	
 	$arr = [];
