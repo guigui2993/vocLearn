@@ -136,7 +136,7 @@ try
 	{
 		$arr[]= [$data[$L_Lang],$data[$G_Lang],$data["ID"]];
 		$wordList[] = $data["ID"];
-		$answerStats[$data["ID"]] = [0,0,0,0,-1];
+		$answerStats[$data["ID"]] = [0,0,0,0,-1,-1];
 	}
 
 	echo 'var wordList ='.json_encode($arr).";";
@@ -223,14 +223,29 @@ mcq.ans = "but_"+idx[3];
 }
 
 displayMCQ();
-
+// TP 0.6+0.4
+// FN 0.4+0.6
+// FP 0.2
 
 $( "button" ).click(function() {
   //$( "#target" ).click();
   var clk = 3-idx.indexOf(Number(this.id.slice(-1)));
   if(this.id==mcq.ans){
     $("#dbg").text("Good");
-	answerStats[wordList[arr_mcq[clk]][2]][0]++;
+	for(var i=0;i<4;++i)
+		if(i==clk){
+			answerStats[wordList[arr_mcq[i]][2]][0]++; // TP
+			if(answerStats[wordList[arr_mcq[i]][2]][4]==-1)
+				answerStats[wordList[arr_mcq[i]][2]][4] = 1;
+			else
+				answerStats[wordList[arr_mcq[i]][2]][4] = answerStats[wordList[arr_mcq[i]][2]][4]*0.6+0.4;
+		}else{
+			answerStats[wordList[arr_mcq[i]][2]][1]++; // TN
+			if(answerStats[wordList[arr_mcq[i]][2]][5]==-1)
+				answerStats[wordList[arr_mcq[i]][2]][5] = 1;
+			else
+				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][4]*0.6+0.4;
+		}
     setTimeout(function(){$("#dbg").text("");
                          mcq = generateMCQ(wordList);
                          displayMCQ();
@@ -240,7 +255,27 @@ $( "button" ).click(function() {
   }else{
     // arr_mcq[clk] => FP, arr_mcq[0] => FN, others TN
     $("#dbg").text("wrong " + idx+ " " +idx.indexOf(3)+" "+arr_mcq[clk]+ " " + wordList[arr_mcq[clk]]);
-	answerStats[wordList[arr_mcq[clk]][2]][2]++; //TODO
+	
+	
+	answerStats[wordList[arr_mcq[0]][2]][3]++; // FN
+	if(answerStats[wordList[arr_mcq[0]][2]][4]==-1)
+		answerStats[wordList[arr_mcq[0]][2]][4] = 0;
+	else
+		answerStats[wordList[arr_mcq[0]][2]][4] = answerStats[wordList[arr_mcq[0]][2]][4]*0.4;
+	for(var i=1;i<4;++i)
+		if(i==clk){
+			answerStats[wordList[arr_mcq[i]][2]][2]++; //FP
+			if(answerStats[wordList[arr_mcq[i]][2]][4]==-1)
+				answerStats[wordList[arr_mcq[i]][2]][4] = 1;
+			else
+				answerStats[wordList[arr_mcq[i]][2]][4] = answerStats[wordList[arr_mcq[i]][2]][4]*0.2;
+		}else{
+			answerStats[wordList[arr_mcq[i]][2]][1]++; // TN
+			if(answerStats[wordList[arr_mcq[i]][2]][5]==-1)
+				answerStats[wordList[arr_mcq[i]][2]][5] = 1;
+			else
+				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][4]*0.6+0.4;
+		}
   // send arr_mcq OK + ID // FN
 
   }
