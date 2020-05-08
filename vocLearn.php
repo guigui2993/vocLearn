@@ -43,6 +43,7 @@ try
 	//
 	$G_Lang = "fr";
 	$L_Lang = "mn";
+	$L_Lang_code = 3;
 	if(isset($_POST["G_Lang"]))
 	    $G_Lang = $_POST["G_Lang"];
 	if(isset($_POST["L_Lang"]))
@@ -64,8 +65,9 @@ try
 	$req->execute();
 	
 	$LangList = [];
-    while ($lang = $req->fetch())
-        $LangList[$lang["CODE"]] = $lang["LANGUAGE"];
+    while ($lang = $req->fetch()){
+		$LangList[$lang["CODE"]] = $lang["LANGUAGE"];
+	}
 
 // join Answer
 	$reqWords = $bdd->prepare('SELECT ID, '.$L_Lang.', '.$G_Lang.' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20'); // RAND() INNER JOIN
@@ -84,7 +86,7 @@ try
 <?php 
 	
 	foreach($LangList as $code => $language){
-		echo "<option value=\"".$code."\"".($code == $G_Lang? " selected" : "").">".$language."</option>";
+		echo "<option value=\"".$code."\"".($language == $G_Lang? " selected" : "").">".$language."</option>";
 	}
 ?>
   
@@ -97,7 +99,10 @@ try
 <select name="L_Lang" id="L_Lang">
 <?php 
 	foreach($LangList as $code => $language){
-		echo "<option value=\"".$code."\"".($code == $L_Lang? " selected" : "").">".$language."</option>";
+		if($language == $L_Lang){
+			$L_Lang_code = $code;
+		}
+		echo "<option value=\"".$code."\"".($language == $L_Lang? " selected" : "").">".$language."</option>";
 
 	}
 ?>
@@ -141,6 +146,7 @@ try
 
 	echo 'var wordList ='.json_encode($arr).";";
 	echo 'var answerStats ='.json_encode($answerStats).";";
+	echo 'var Learn_Lang = "'.$L_Lang_code.'";';
 	
 	/*
 	echo "\n";
@@ -222,6 +228,7 @@ $("#ans").text(mcq.quest);
 mcq.ans = "but_"+idx[3];
 }
 
+var gameNumber = 0;
 displayMCQ();
 // TP 0.6+0.4
 // FN 0.4+0.6
@@ -244,14 +251,8 @@ $( "button" ).click(function() {
 			if(answerStats[wordList[arr_mcq[i]][2]][5]==-1)
 				answerStats[wordList[arr_mcq[i]][2]][5] = 1;
 			else
-				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][4]*0.6+0.4;
+				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][5]*0.6+0.4;
 		}
-    setTimeout(function(){$("#dbg").text("");
-                         mcq = generateMCQ(wordList);
-                         displayMCQ();
-                         $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx + "\n");
-                          // send arr_mcq OK + ID // TP TN FP FN
-                         }, 1000);
   }else{
     // arr_mcq[clk] => FP, arr_mcq[0] => FN, others TN
     $("#dbg").text("wrong " + idx+ " " +idx.indexOf(3)+" "+arr_mcq[clk]+ " " + wordList[arr_mcq[clk]]);
@@ -274,23 +275,29 @@ $( "button" ).click(function() {
 			if(answerStats[wordList[arr_mcq[i]][2]][5]==-1)
 				answerStats[wordList[arr_mcq[i]][2]][5] = 1;
 			else
-				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][4]*0.6+0.4;
+				answerStats[wordList[arr_mcq[i]][2]][5] = answerStats[wordList[arr_mcq[i]][2]][5]*0.6+0.4;
 		}
   // send arr_mcq OK + ID // FN
 
   }
-});
+  gameNumber++;
+	if(gameNumber==8){
+		$("#ans").text("Test terminé");
+		var posting = $.post( "updateStats.php", { L_Lang: Learn_Lang, AnswerStats: JSON.stringify(answerStats) } ); // ToUpdate L_Lang
 
-/*
-// Send the data using post
-  var posting = $.post( url, { s: term } );
- 
-  // Put the results in a div
-  posting.done(function( data ) {
-    var content = $( data ).find( "#content" );
-    $( "#result" ).empty().append( content );
-  });
-*/
+		// Put the results in a div
+		posting.done(function( data ) {
+		$( "#disp" ).empty().append( data );
+		});
+	}else{
+		setTimeout(function(){$("#dbg").text("");
+							 mcq = generateMCQ(wordList);
+							 displayMCQ();
+							 $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx + "\n");
+							  // send arr_mcq OK + ID // TP TN FP FN
+							 }, 1000);
+	}
+});
 
 </script>
 
