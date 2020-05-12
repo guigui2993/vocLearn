@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width">
   <title>JS Bin</title>
 <style id="jsbin-css">
-button{
+button.MCQ{
   width: 120px;
   height: 120px;
 }
@@ -111,7 +111,21 @@ try
 		<textarea id="addWords" name="addWords"></textarea>
 		<input type="submit" value="Submit">
 	</form>
-
+  <table>
+  <tr>
+	<td>Question Language</td>
+	<td><button id="switchLang"><=></button></td>
+	<td>Choices Language</td>
+  </tr>
+  <tr>
+	<td id="questLang"><?php echo $LangList[$M_Lang];?></td>
+	<td></td>
+	<td id="choicesLang"><?php echo $LangList[$L_Lang];?></td>
+  </tr>
+    
+    <p id="dbg"></p>
+    <p id="disp"></p>
+</table>
 
   <h1 id="ans"></h1>
   <table>
@@ -119,12 +133,12 @@ try
   <td colspan="2" id="quest"></td>
   </tr>
   <tr>
-  <td><button id="but_0"></button></td>
-  <td><button id="but_1"></button></td>
+  <td><button id="but_0" class="MCQ"></button></td>
+  <td><button id="but_1" class="MCQ"></button></td>
   </tr>
   <tr>
-  <td><button id="but_2"></button></td>
-  <td><button id="but_3"></button></td>
+  <td><button id="but_2" class="MCQ"></button></td>
+  <td><button id="but_3" class="MCQ"></button></td>
   </tr>
     
     <p id="dbg"></p>
@@ -233,7 +247,7 @@ displayMCQ();
 // FN 0.4+0.6
 // FP 0.2
 
-$( "button" ).click(function() {
+$("button.MCQ").click(function() {
   //$( "#target" ).click();
   var clk = 3-idx.indexOf(Number(this.id.slice(-1)));
   if(this.id==mcq.ans){
@@ -298,6 +312,16 @@ $( "button" ).click(function() {
 	}
 });
 
+$("#switchLang").click(function(){
+	var tmp = wordList[1];
+	wordList[1] = wordList[0];
+	wordList[0] = tmp;
+	tmp = $("#questLang").html();
+	$("#questLang").html($("#choicesLang").html());
+	$("#choicesLang").html(tmp);
+	mcq = generateMCQ(wordList);
+	displayMCQ();
+});
 </script>
 
 <?php
