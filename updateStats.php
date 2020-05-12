@@ -14,7 +14,7 @@ try
 	if(isset($_POST["AnswerStats"])){
 	    $answerStats = json_decode($_POST["AnswerStats"],true);
 	    // insert update
-		$req = $bdd->prepare('INSERT INTO Answer(USER, WORD, LANG, DATE, TRUE_POS, TRUE_NEG, FALSE_POS, FALSE_NEG, SCORE_1, SCORE) VALUES(:userID, :wordID, :Lang, NOW(), :TP, :TN, :FP, :FN, :score, :score) ON DUPLICATE KEY UPDATE TRUE_POS = TRUE_POS + :TP, TRUE_NEG = TRUE_NEG + :TN, FALSE_POS = FALSE_POS + :FP, FALSE_NEG = FALSE_NEG + :FN, SCORE = :score*0.6+SCORE_1*0.4+SCORE_2*0.2, SCORE_3 = SCORE_2, SCORE_2 = SCORE_1, SCORE_1 = :score, DATE = NOW()');
+		$req = $bdd->prepare('INSERT INTO Answer(USER, WORD, LANG, DATE, TRUE_POS, TRUE_NEG, FALSE_POS, FALSE_NEG, SCORE_1, SCORE) VALUES(:userID, :wordID, :Lang, NOW(), :TP, :TN, :FP, :FN, :score, :score *0.5) ON DUPLICATE KEY UPDATE TRUE_POS = TRUE_POS + :TP, TRUE_NEG = TRUE_NEG + :TN, FALSE_POS = FALSE_POS + :FP, FALSE_NEG = FALSE_NEG + :FN, SCORE = :score*0.5+SCORE_1*0.3+SCORE_2*0.2, SCORE_3 = SCORE_2, SCORE_2 = SCORE_1, SCORE_1 = :score, DATE = NOW()');
 
 		foreach($answerStats as $wordID => $stat){
 			$score = $stat[4];
