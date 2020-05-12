@@ -41,11 +41,11 @@ try
 	// To Update
 	$userID = 1;
 	//
-	$G_Lang = "fr";
-	$L_Lang = "mn";
-	$L_Lang_code = 3;
-	if(isset($_POST["G_Lang"]))
-	    $G_Lang = $_POST["G_Lang"];
+	$M_Lang = 1; //"fr";
+	$L_Lang = 3; //"mn";
+
+	if(isset($_POST["M_Lang"]))
+	    $M_Lang = $_POST["M_Lang"];
 	if(isset($_POST["L_Lang"]))
 	    $L_Lang = $_POST["L_Lang"];
 	
@@ -61,18 +61,20 @@ try
 		}
 	}
 
-	$req = $bdd->prepare('SELECT CODE, LANGUAGE FROM Language');
+	$req = $bdd->prepare('SELECT ID, CODE, LANGUAGE FROM Language');
 	$req->execute();
 	
 	$LangList = [];
+	$LangCodeList = [];
     while ($lang = $req->fetch()){
-		$LangList[$lang["CODE"]] = $lang["LANGUAGE"];
+		$LangList[$lang["ID"]] = $lang["LANGUAGE"];
+		$LangCodeList[$lang["ID"]] = $lang["CODE"];
 	}
 
 // join Answer
-	$reqWords = $bdd->prepare('SELECT ID, '.$L_Lang.', '.$G_Lang.' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20'); // RAND() INNER JOIN
+	$reqWords = $bdd->prepare('SELECT ID, '.$LangCodeList[$L_Lang].', '.$LangCodeList[$M_Lang].' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20'); // RAND() INNER JOIN
 	$reqWords->execute();
-	
+
 	$arr = [];
 	$wordList = [];
 	
@@ -80,13 +82,13 @@ try
 	
 <form action="/vocLearn.php" method="post">
 
- <label for="G_Lang">Language of the game:</label>
+ <label for="M_Lang">Language masterized:</label>
 
-<select name="G_Lang" id="G_Lang">
+<select name="M_Lang" id="M_Lang">
 <?php 
 	
 	foreach($LangList as $code => $language){
-		echo "<option value=\"".$code."\"".($language == $G_Lang? " selected" : "").">".$language."</option>";
+		echo "<option value=\"".$code."\"".($language == $M_Lang? " selected" : "").">".$language."</option>";
 	}
 ?>
   
@@ -99,9 +101,6 @@ try
 <select name="L_Lang" id="L_Lang">
 <?php 
 	foreach($LangList as $code => $language){
-		if($language == $L_Lang){
-			$L_Lang_code = $code;
-		}
 		echo "<option value=\"".$code."\"".($language == $L_Lang? " selected" : "").">".$language."</option>";
 
 	}
@@ -139,14 +138,14 @@ try
 	
 	while ($data = $reqWords->fetch())
 	{
-		$arr[]= [$data[$L_Lang],$data[$G_Lang],$data["ID"]];
+		$arr[]= [$data[$LangCodeList[$L_Lang]],$data[$LangCodeList[$M_Lang]],$data["ID"]];
 		$wordList[] = $data["ID"];
 		$answerStats[$data["ID"]] = [0,0,0,0,-1,-1];
 	}
 
 	echo 'var wordList ='.json_encode($arr).";";
 	echo 'var answerStats ='.json_encode($answerStats).";";
-	echo 'var Learn_Lang = "'.$L_Lang_code.'";';
+	echo 'var Learn_Lang = "'.$L_Lang.'";';
 	
 	/*
 	echo "\n";
