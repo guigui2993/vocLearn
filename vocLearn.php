@@ -172,22 +172,23 @@ try
 
 var words = {};
 var arr_mcq;
-var idx;
+var idx_words = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
 // answer always the last
 //var mcq = { "choices" : ["эу", "дарс", "сүү", "шар айраг"], "quest" : "Bière"};
 
 function generateMCQ(wordList){
-  var idx = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
+  
   MCQ_Number++;
   
-  arr_mcq = mcqIdxLst_rand(idx);
+  arr_mcq = mcqIdxLst_rand(idx_words);
 
   //$("#dbg").text($("#dbg").text()+r.choices+"\n");
   return { "choices": [wordList[arr_mcq[0]][0], wordList[arr_mcq[1]][0], wordList[arr_mcq[2]][0], wordList[arr_mcq[3]][0]], "quest" : wordList[arr_mcq[0]][1]};
 }
 
 
-function mcqIdxLst_rand(wordLists_idx){
+function mcqIdxLst_rand(wordLists_idx_cst){
+	var wordLists_idx = wordLists_idx_cst.slice();
   arr_mcq = [];
   for(var i=0;i<4;++i){
     
@@ -203,6 +204,7 @@ function mcqIdxLst_rand(wordLists_idx){
 var MCQ_Number = 0;
 
 var mcq = generateMCQ(wordList);
+var idx_mcq;
 
 function displayMCQ(){
   var sortIdx = [[0,1,2,3],
@@ -232,13 +234,13 @@ function displayMCQ(){
 
 
 var shuffle = Math.floor(Math.random()*24);
-idx = sortIdx[shuffle];
+idx_mcq = sortIdx[shuffle];
 for(var i=0;i<4;++i){
-  var but_ans = "#but_" + idx[i];
-  $(but_ans).text(mcq.choices.pop());
+  var but_ans = "#but_" + idx_mcq[i];
+  $(but_ans).text(mcq.choices.pop()); // but_idx[0] = choices[3], ... , but_idx[3] = choices[0] = ans
 }
 $("#ans").text(mcq.quest);
-mcq.ans = "but_"+idx[3];
+mcq.ans = "but_"+idx_mcq[3];
 }
 
 var gameNumber = 0;
@@ -249,9 +251,12 @@ displayMCQ();
 
 $("button.MCQ").click(function() {
   //$( "#target" ).click();
-  var clk = 3-idx.indexOf(Number(this.id.slice(-1)));
+  var clk = 3-idx_mcq.indexOf(Number(this.id.slice(-1)));
   if(this.id==mcq.ans){
     $("#dbg").text("Good");
+	$("#dbg_2").text(arr_mcq[3]+" "+idx_words + "\n");
+	idx_words.splice(arr_mcq[3],1);
+	$("#dbg_2").text($("#dbg_2").text()+" "+idx_words + "\n");
 	for(var i=0;i<4;++i)
 		if(i==clk){
 			answerStats[wordList[arr_mcq[i]][2]][0]++; // TP
@@ -268,7 +273,7 @@ $("button.MCQ").click(function() {
 		}
   }else{
     // arr_mcq[clk] => FP, arr_mcq[0] => FN, others TN
-    $("#dbg").text("wrong " + idx+ " " +idx.indexOf(3)+" "+arr_mcq[clk]+ " " + wordList[arr_mcq[clk]]);
+    $("#dbg").text("wrong " + idx_words+ " " +idx_words.indexOf(3)+" "+arr_mcq[clk]+ " " + wordList[arr_mcq[clk]]);
 	
 	
 	answerStats[wordList[arr_mcq[0]][2]][3]++; // FN
@@ -306,16 +311,19 @@ $("button.MCQ").click(function() {
 		setTimeout(function(){$("#dbg").text("");
 							 mcq = generateMCQ(wordList);
 							 displayMCQ();
-							 $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx + "\n");
+							 $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx_words + "\n");
 							  // send arr_mcq OK + ID // TP TN FP FN
 							 }, 1000);
 	}
 });
 
 $("#switchLang").click(function(){
-	var tmp = wordList[1];
-	wordList[1] = wordList[0];
-	wordList[0] = tmp;
+	var tmp;
+	for(var i=0;i<wordList.length;++i){
+		tmp = wordList[i][1];
+		wordList[i][1] = wordList[i][0];
+		wordList[i][0] = tmp;
+	}
 	tmp = $("#questLang").html();
 	$("#questLang").html($("#choicesLang").html());
 	$("#choicesLang").html(tmp);
