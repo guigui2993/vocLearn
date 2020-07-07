@@ -1,6 +1,9 @@
 /*
-TODO: backspace in case someone delete the selection
-combination ô
+TODO:
+- accent : âêîôû àèìòù áéíóúý äëïöüÿ ñõã
+BUG:
+- dead key: prevent backspace => can't delete selection.
+- 1 px keyboard line 4 ru,fr
 */
 
 var KB_layout, key_comb='', lastKeyPressed;
@@ -51,7 +54,7 @@ C: {
 "KeyL": ["l","L",""],
 "Semicolon": ["m","M",""],
 "Quote": ["ù","%","´"],
-"Backslash": ["µ","`"]},
+"Backslash": ["µ","£","`"]},
 B : {
 "ShiftLeft": ["⇧","","",{"width": "39"}],
 "IntlBackslash": ["<",">",""],
@@ -70,13 +73,12 @@ A: {
 "ControlLeft": ["Ctrl","","",{"width": "44","font-size":"10px"}],
 "MetaLeft": ["Meta","","",{"width": "44","font-size":"10px"}],
 "AltLeft": ["Alt","","",{"width": "44","font-size":"10px"}],
-"Space": ["\b","","",{"width": "171","font-size":"10px"}],
+"Space": ["&nbsp;","","",{"width": "171","font-size":"10px"}],
 "AltRight": ["Alt Gr","","",{"width": "44","font-size":"10px"}],
 "MetaRight": ["Meta","","",{"width": "44","font-size":"10px"}],
 "ContextMenu": ["Menu","","",{"width": "44","font-size":"10px"}],
 "ControlRight": ["Ctrl","","",{"width": "44","font-size":"10px"}]
-}
-    };
+}};
 
 // backspce is split into 2 keys 
 var KB_layout_ru = 
@@ -144,7 +146,7 @@ A: {
 "ControlLeft": ["Ctrl","","",{"width": "44","font-size":"10px"}],
 "MetaLeft": ["Meta","","",{"width": "44","font-size":"10px"}],
 "AltLeft": ["Alt","","",{"width": "44","font-size":"10px"}],
-"Space": ["\b","","",{"width": "171","font-size":"10px"}],
+"Space": ["&nbsp;","","",{"width": "171","font-size":"10px"}],
 "AltRight": ["Alt Gr","","",{"width": "44","font-size":"10px"}],
 "MetaRight": ["Meta","","",{"width": "44","font-size":"10px"}],
 "ContextMenu": ["Menu","","",{"width": "44","font-size":"10px"}],
@@ -216,7 +218,7 @@ A: {
 "ControlLeft": ["Ctrl","","",{"width": "44","font-size":"10px"}],
 "MetaLeft": ["Meta","","",{"width": "44","font-size":"10px"}],
 "AltLeft": ["Alt","","",{"width": "44","font-size":"10px"}],
-"Space": ["\b","","",{"width": "171","font-size":"10px"}],
+"Space": ["&nbsp;","","",{"width": "171","font-size":"10px"}],
 "AltRight": ["Alt Gr","","",{"width": "44","font-size":"10px"}],
 "MetaRight": ["Meta","","",{"width": "44","font-size":"10px"}],
 "ContextMenu": ["Menu","","",{"width": "44","font-size":"10px"}],
@@ -230,11 +232,12 @@ function generateKeyboard(keyboardLayout){
     $("#KB_row_"+row).empty();
 
     for(var j in keyboardLayout[row]){
-      but = $(document.createElement('button')).data('KB-col',j).html(keyboardLayout[row][j][0]);
+      but = $(document.createElement('button')).addClass("KB_button").data('KB-Key',j).html(keyboardLayout[row][j][0]);
       if(keyboardLayout[row][j].length==4)
         but.css(keyboardLayout[row][j][3]);
         if(keyboardLayout[row][j][3]=="void")
           continue;
+      but.click(KB_ButtonClickFct);
       $("#KB_row_"+row).append(but);
     }
   }
@@ -242,113 +245,27 @@ function generateKeyboard(keyboardLayout){
 }
 
 
-// KB_layout_be_fr
-// KB_layout_ru
-// KB_layout_mn
+generateKeyboard(KB_layout_mn);
+generateKeyboard(KB_layout_mn);
 generateKeyboard(KB_layout_be_fr);
 
-function physicalKey2map(emulKB, physKey){
-keyboard_mapping={ // std_102
-"Backquote": "E0",
-"Digit1": "E1",
-"Digit2": "E2",
-"Digit3": "E3",
-"Digit4": "E4",
-"Digit5": "E5",
-"Digit6": "E6",
-"Digit7": "E7",
-"Digit8": "E8",
-"Digit9": "E9",
-"Digit0": "E10",
-"Minus": "E11",
-"Equal": "E12",
-"Backspace": "E13",
+//$("#dbg").append("<"+document.getSelection()+">");
 
-"Tab": "D0",
-"KeyQ": "D1",
-"KeyW": "D2",
-"KeyE": "D3",
-"KeyR": "D4",
-"KeyT": "D5",
-"KeyY": "D6",
-"KeyU": "D7",
-"KeyI": "D8",
-"KeyO": "D9",
-"KeyP": "D10",
-"BracketLeft": "D11",
-"BracketRight": "D12",
-
-"CapsLock": "C0",
-"KeyA": "C1",
-"KeyS": "C2",
-"KeyD": "C3",
-"KeyF": "C4",
-"KeyG": "C5",
-"KeyH": "C6",
-"KeyJ": "C7",
-"KeyK": "C8",
-"KeyL": "C9",
-"Semicolon": "C10",
-"Quote": "C11",
-"Backslash": "C12",
-"Enter": "C13",
-
-"ShiftLeft": "B99",
-"IntlBackslash": "B0",
-"KeyZ": "B1",
-"KeyX": "B2",
-"KeyC": "B3",
-"KeyV": "B4",
-"KeyB": "B5",
-"KeyN": "B6",
-"KeyM": "B7",
-"Comma": "B8",
-"Period": "B9",
-"Slash": "B10",
-"ShiftRight": "B11"};
- /*
-  switch(emulKB){
-    case "std_101":
-      keyboard_mapping["Backslash"] = "D13";
-  }
-  */
-  var coord = keyboard_mapping[physKey];
-    
-  var row = coord[0];
-  var col = coord.substring(1);
-  return {"row":row, "col": col};
-}
-/*
-$( "#answer" ).keydown(function( event ){
-  //var x = event.code;
-  //event.preventDefault();
-  //x = event.location;
-  /*
-  var loc = keyboard_be_fr_mapping[x];
-  var row = loc[0];
-  var col = loc.substring(1);
+document.getElementById("answer").addEventListener("keydown", function(event) {
+  var unpreventedKeys = ["F1","F2","F3","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12","Insert","Delete","PageUP","PageDown","Home","End","ScrollLock","Pause","NumLock","NumpadDivide","NumpadMultiply","NumpadAdd","NumpadSubtract","NumpadDecimal","Numpad1","Numpad2","Numpad3","Numpad4","Numpad5","Numpad6","Numpad7","Numpad8","Numpad9","Numpad0","ArrowUp","ArrowDown","ArrowLeft","ArrowRight","ShiftLeft","ShiftRight","ControlLeft","ControlRight","AltLeft","AltRight","MetaLeft","MetaRight","ContextMenu"];
   
-  $("#dbg").append(x+ " " +row+" "+col);
-  $( "#answer" ).val($( "#answer" ).val()+KB_layout[row][col][KBcomb]);
-  * /
-  $("#dbg").append(event.which);
-  alert(event.code);
-});*/
-
-/*
-document.getElementById("answer").addEventListener("keydown", function(event) {
   var code = event.code;
-  $("#dbg").append("["+event.isComposing+"]");
-
-}, true);
-*/
-/**/
-document.getElementById("answer").addEventListener("keydown", function(event) {
-  var code = event.code;
-  var unpreventedKeys = ["←","↹","⇪ Lock","↵","\b","Ctrl","Alt Gr","Alt","Meta","Menu"];
+  
+  if(unpreventedKeys.includes(code)){
+    $("#dbg2").append("yy");
+    return;
+    
+  }
+  
+  unpreventedKeys = ["←","↹","↵","&nbsp;"];
   var chr= "";
   var key_pos = 0;
-  
+  var txt = $("#answer").val();
   
   if(event.shiftKey)
     key_pos = 1;
@@ -360,26 +277,54 @@ document.getElementById("answer").addEventListener("keydown", function(event) {
       break;
     }
   }
-  $("#dbg").append("["+code+" "+chr+"]");
-  //$("#dbg").append("<"+document.getSelection()+">");
+  $("#dbg").append("["+code+" §"+chr+"§ "+event.which+" !"+event.key+"]");
   
+  if(code=="Space" && event.key !=" "){
+    chr = " ";
+  }
+  if(code=="Backspace" && event.key !="Backspace"){
+    event.preventDefault();
+    
+    $( "#answer" ).val(txt.substring(0,txt.length-1));
+    $("#dbg2").append("OK]");
+    return;
+  }
+  if(code=="Tab" && event.key !="Tab"){
+    event.preventDefault();
+    $("#dbg2").append("OK]");
+    return;
+  }
   
   if(unpreventedKeys.includes(chr)||chr=="AltGr")
     return;
+
+  var accent={'^': {'a':'â','e':'ê','i':'î','o':'ô','u':'û'},
+              '`': {'a':'à','e':'è','i':'ì','o':'ò','u':'ù'},
+              '´': {'a':'á','e':'é','i':'í','o':'ó','u':'ú','y':'ý'},
+              '¨': {'a':'ä','e':'ë','i':'ï','o':'ö','u':'ü','y':'ÿ'},
+              '~': {'n':'ñ','o':'õ','a':'ã'}}; 
+  event.preventDefault();
   
-  if(chr!="⇧"){
-    var txt = $("#answer").val();
-    if(chr=="←"){
-      $( "#answer" ).val(txt.substring(0,txt.length-1));
-    }else
-      $( "#answer" ).val(txt+chr);
+  if(chr in accent && key_comb==''){
+    key_comb = chr;
+    return;
     
   }
-  $("#dbg").append("[<"+event.isComposing+"]");
-  event.preventDefault();
-}, true);
-/*
-document.getElementById("answer").addEventListener("click", function(event) {
-  $("#dbg").append("<"+document.getSelection()+">");
   
-}, true);*/
+  if(key_comb in accent){
+    if(chr in accent[key_comb])
+      chr = accent[key_comb][chr];
+    else
+      chr = key_comb + chr;
+    key_comb = '';
+  }
+  
+  $("#answer").val(txt+chr); 
+  $("#dbg").append("["+event.isComposing+"]");
+}, true);
+
+var KB_ButtonClickFct = function() {
+  $("#dbg").append("["+$( this).data("KB-Key")+"]");
+};
+
+$("#keyboard button").click(KB_ButtonClickFct);
