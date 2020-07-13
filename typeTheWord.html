@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<meta name="robots" content="noindex">
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+<style id="jsbin-css">
+
+</style>
+</head>
+<body>
+<?php
+try
+{
+	$bdd = new PDO('mysql:host=localhost;dbname=id12472592_voclearn;charset=utf8', 'id12472592_voclearnuser', 'v0cL43rn');
+	
+	// To Update
+	$userID = 1;
+	//
+	$M_Lang = 1; //"fr";
+	$L_Lang = 3; //"mn";
+
+	if(isset($_POST["M_Lang"]))
+	    $M_Lang = $_POST["M_Lang"];
+	if(isset($_POST["L_Lang"]))
+	    $L_Lang = $_POST["L_Lang"];
+	
+	if(isset($_POST["answerStats"],$_POST["settings"])){
+	    $answerStats = json_decode($_POST["answerStats"],true);
+	    
+	    // insert update
+		$req = $bdd->prepare('INSERT INTO Answers(USER, WORD, LANG, DATE) VALUES(:userID, :wordID, :Lang, NOW()) ON DUPLICATE KEY UPDATE TRUE_POS = VALUES(TRUE_POS) + :TP, TRUE_NEG = VALUES(TRUE_NEG) + :TN, FALSE_POS = VALUES(FALSE_POS) + :FP, FALSE_NEG = VALUES(FALSE_NEG) + :FN, SCORE_1 = :score, SCORE_2 = VALUES(SCORE_1), SCORE_3 = VALUES(SCORE_2), SCORE = :score*0.6+VALUES(SCORE_1)*0.4+VALUES(SCORE_2)*0.2, DATE = NOW()');
+		
+		foreach($answerStats as $wordID => $stat){
+			$answer = ["userID" => $userID, "Lang" => $L_Lang, "wordID" => $wordID, "TP" => $stat[0],  "TN" => $stat[1], "FP" => $stat[2], "FN" => $stat[3], "score" => $stat[4]];
+		    $req->execute($answer);
+		}
+	}
+
+	$req = $bdd->prepare('SELECT ID, CODE, LANGUAGE FROM Language');
+	$req->execute();
+	
+	$LangList = [];
+	$LangCodeList = [];
+    while ($lang = $req->fetch()){
+		$LangList[$lang["ID"]] = $lang["LANGUAGE"];
+		$LangCodeList[$lang["ID"]] = $lang["CODE"];
+	}
+
+// join Answer
+	$reqWords = $bdd->prepare('SELECT ID, '.$LangCodeList[$L_Lang].', '.$LangCodeList[$M_Lang].' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 8'); // RAND() INNER JOIN
+	$reqWords->execute();
+
+	$arr = [];
+	$wordList = [];
+	
+	?>
+	
+<form action="/typeTheWord.php" method="post">
+
+ <label for="M_Lang">Language masterized:</label>
+
+<select name="M_Lang" id="M_Lang">
+<?php 
+	
+	foreach($LangList as $code => $language){
+		echo "<option value=\"".$code."\"".($language == $M_Lang? " selected" : "").">".$language."</option>";
+	}
+?>
+  
+</select> 
+
+<br/>
+
+ <label for="L_Lang">Language to learn:</label>
+
+<select name="L_Lang" id="L_Lang">
+<?php 
+	foreach($LangList as $code => $language){
+		echo "<option value=\"".$code."\"".($language == $L_Lang? " selected" : "").">".$language."</option>";
+
+	}
+?>
+  
+</select> 
+	
+  <table>
+  <tr>
+	<td>Question Language</td>
+	<td><button id="switchLang"><=></button></td>
+	<td>Choices Language</td>
+  </tr>
+  <tr>
+	<td id="questLang"><?php echo $LangList[$M_Lang];?></td>
+	<td></td>
+	<td id="choicesLang"><?php echo $LangList[$L_Lang];?></td>
+  </tr>
+    </table>
+	
+	<h1 id="quest"></h1>
+	<input type="text" id="ans"/>
+	<input id="submit" type="submit" value="Submit"/>
+	
+	</form>
+    <p id="dbg"></p>
+    <p id="disp"></p>
+
+<script src="https://code.jquery.com/jquery-git.js"></script>
+<script id="jsbin-javascript">
+
+<?php
+	
+	
+	while ($data = $reqWords->fetch())
+	{
+		$arr[]= [$data[$LangCodeList[$L_Lang]],$data[$LangCodeList[$M_Lang]],$data["ID"]];
+		$wordList[] = $data["ID"];
+		$answerTypeStats[$data["ID"]] = -1;// -1 => no score
+	}
+
+	echo 'var wordList ='.json_encode($arr).";";
+	echo 'var answerTypeStats ='.json_encode($answerTypeStats).";";// useless
+	echo 'var Learn_Lang = "'.$L_Lang.'";';
+	
+	/*
+	echo "\n";
+	var_dump($arr);
+	var_dump($wordList);
+	echo "\n";
+	*/
+
+?>
+var words = {};
+var arr_mcq;
+
+var Q_Number = 0;
+
+var mcq = generateQ(wordList);
+var idx_mcq;
+
+function displayQ(){
+	$("#quest").text(wordList[Q_Number][0]);
+}
+
+var gameNumber = 0;
+displayQ();
+// TP 0.6+0.4
+// FN 0.4+0.6
+// FP 0.2
+
+function levenshteinDistance (s, t){
+    if (!s.length) return t.length;
+    if (!t.length) return s.length;
+
+    return Math.min(
+        levenshteinDistance(s.substr(1), t) + 1,
+        levenshteinDistance(t.substr(1), s) + 1,
+        levenshteinDistance(s.substr(1), t.substr(1)) + (s[0] !== t[0] ? 1 : 0)
+    ) + 1;
+}
+
+$("submit").click(function(){
+	var thresholt = 1;
+	var dist = levenshteinDistance($("#ans").value(),wordList[Q_Number][1]);
+	if(dist<=thresholt){
+		//ok
+		answerTypeStats[wordList[Q_Number][2]] = 1.0; // or maybe a formula with dist
+	}else{
+	// nok
+		answerTypeStats[wordList[Q_Number][2]] = 0.0;
+	}
+	gameNumber++;
+	if(gameNumber==8){
+		$("#ans").text("Test terminé");
+		var posting = $.post( "updateStats.php", { L_Lang: Learn_Lang, AnswerTypeStats: JSON.stringify(answerTypeStats) } ); // ToUpdate L_Lang
+
+		// Put the results in a div
+		posting.done(function( data ) {
+		$("#disp").empty().append( data );
+		});
+	}else{
+		setTimeout(function(){$("#dbg").text("");
+							 displayQ();
+							 $("#dbg").text($("#dbg").text()+arr_mcq+" "+idx_words + "\n");
+							  // send arr_mcq OK + ID // TP TN FP FN
+							 }, 1000);
+	}
+});
+
+$("#switchLang").click(function(){
+	var tmp;
+	for(var i=0;i<wordList.length;++i){
+		tmp = wordList[i][1];
+		wordList[i][1] = wordList[i][0];
+		wordList[i][0] = tmp;
+	}
+	tmp = $("#questLang").html();
+	$("#questLang").html($("#choicesLang").html());
+	$("#choicesLang").html(tmp);
+	mcq = generateMCQ(wordList);
+	displayMCQ();
+});
+</script>
+
+<?php
+
+}
+catch (Exception $e)
+{
+        die('Erreur : ' . $e->getMessage());
+}
+
+
+?>
+
+</body>
+</html>
