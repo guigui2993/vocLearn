@@ -107,6 +107,10 @@ echo 'var wordw ='.json_encode($words).";";
 </table>
 </div>
 
+<div>
+<input type="range" id="difficulty" name="difficulty" min="0" max="3" step="1">
+</div>
+
 <div id="game">Game</div>
     
     <p id="dbg"></p>
