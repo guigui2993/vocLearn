@@ -37,5 +37,7 @@ function generateMCQ_template(words){
 	);
 }
 
-
-difficulty
+$("#difficulty").change(fonction(){
+  var levers = [""]
+  this.value
+});
