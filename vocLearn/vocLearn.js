@@ -37,7 +37,9 @@ function generateMCQ_template(words){
 	);
 }
 
+var progress = 0; 
+var difficultyLabels = ["Easy", "Intermediate", "Hard", "Extreme"];
 $("#difficulty").change(fonction(){
-  var levers = [""]
-  this.value
+  
+  $("#difficultyLabel").html(difficultyLabels[$(this).value]);
 });
