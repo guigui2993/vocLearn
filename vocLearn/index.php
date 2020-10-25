@@ -49,12 +49,7 @@ $reqWords->execute();
 while ($data = $reqWords->fetch()){
 	$words[$data["ID"]]= ["learnLang" => $data[$LangCodeList[$L_Lang]], "masteredLang" =>  $data[$LangCodeList[$M_Lang]], "score" => -1]; // -1 => no score otherwise score is between 0 and 1 
 }
-
-echo 'var wordw ='.json_encode($words).";";
-
 // END MODEL
-
-
 ?>
 
 <div>
@@ -116,4 +111,9 @@ echo 'var wordw ='.json_encode($words).";";
     <p id="dbg"></p>
     <p id="disp"></p>
 </body>
+<script>
+<?php
+echo 'var words ='.json_encode($words).";";
+?>
+</script>
 </html>
