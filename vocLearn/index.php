@@ -47,7 +47,7 @@ $reqWords = $db->prepare('SELECT ID, '.$user->learntLang.', '.$user->masteredLan
 $reqWords->execute();
 
 while ($data = $reqWords->fetch()){
-	$words[$data["ID"]]= ["learnLang" => $data[$LangCodeList[$L_Lang]], "masteredLang" =>  $data[$LangCodeList[$M_Lang]], "score" => -1]; // -1 => no score otherwise score is between 0 and 1 
+	$words[$data["ID"]]= ["learntLang" => $data[$LangCodeList[$L_Lang]], "masteredLang" =>  $data[$LangCodeList[$M_Lang]], "score" => -1]; // -1 => no score otherwise score is between 0 and 1 
 }
 // END MODEL
 ?>
