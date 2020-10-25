@@ -83,4 +83,7 @@ function generateMCQ(){
     if(ansI==i)
       $("#quest").html(words[questionLang]);
   }
+  progress += 20;
+  // todo update progress barre
 }
+
