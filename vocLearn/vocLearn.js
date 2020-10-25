@@ -57,6 +57,18 @@ function msg(text){
   $("#msg").hide();
 }
 
+wordsId = words.keys();
+ansI = 0;
+answerLang = "learntLang";
+questionLang = "masteredLang";
+
 function generateMCQ(){
-  
+  ansI = math.floor(Math.random()*4);
+  for(var i=0;i<4;i++){
+    idWord = wordsId.pop();
+    word = words[idWord][answerLang];
+    $("#but_"+ i).html(word);
+    if(ansI==i)
+      $("#quest").html(words[questionLang])
+  }
 }
