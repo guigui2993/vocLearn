@@ -37,9 +37,10 @@ function generateMCQ_template(words){
 	);
 }
 
-var progress = -1; // -1 not in a game otherwise 0 to 100
+var progress = -20; // <0 : not in a game otherwise 0 to 100
 var level = 0;
 var difficultyLabels = ["Easy", "Intermediate", "Hard", "Extreme"];
+
 $("#difficulty").change(fonction(){
   if(progress != -1){
     msg("modification not yet supported during a game");
@@ -47,6 +48,17 @@ $("#difficulty").change(fonction(){
   }else{
     level =$(this).value;
     $("#difficultyLabel").html(difficultyLabels[level]);
+  }
+});
+
+// switch language question <> answer
+$("#switchLang").click(function(){
+  if(answerLang=="learntLang"){
+    answerLang = "masteredLang";
+    questionLang = "learntLang";
+  }else{
+    answerLang = "learntLang";
+    questionLang = "masteredLang";
   }
 });
 
@@ -69,6 +81,6 @@ function generateMCQ(){
     word = words[idWord][answerLang];
     $("#but_"+ i).html(word);
     if(ansI==i)
-      $("#quest").html(words[questionLang])
+      $("#quest").html(words[questionLang]);
   }
 }
