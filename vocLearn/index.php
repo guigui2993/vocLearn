@@ -1,7 +1,7 @@
 <?php 
+require_once('user.php');
 session_start();
 
-require_once('user.php');
 //require_once('model.php'); // model
 
 $db = new PDO('mysql:host=localhost;dbname=id12472592_voclearn;charset=utf8', 'id12472592_voclearnuser', 'v0cL43rn');
@@ -12,6 +12,8 @@ $db = new PDO('mysql:host=localhost;dbname=id12472592_voclearn;charset=utf8', 'i
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>Improve your vocabulary</title>
+  <link rel="stylesheet" href="vocLearn.css">
+  <script src="https://code.jquery.com/jquery-git.js"></script>
 </head>
 <body>
 
@@ -21,7 +23,7 @@ $db = new PDO('mysql:host=localhost;dbname=id12472592_voclearn;charset=utf8', 'i
 	if(! isset($_SESSION["user"])){ // user session not set
 		if(isset($_POST["login"], $_POST["pwd"])){ // user is signing in
 			$login = substr(htmlspecialchars($_POST["login"]),0,15); // max login size is 15 !
-			$pwd = substr(htmlspecialchars($_POST["pwd"],0,15); // max pwd size is 15 !
+			$pwd = substr(htmlspecialchars($_POST["pwd"]),0,15); // max pwd size is 15 !
 			$_SESSION["user"] = User::userConnection($login, $pwd);
 		}else{
 			$_SESSION["user"] = User::userVisitor();
@@ -36,18 +38,18 @@ $db = new PDO('mysql:host=localhost;dbname=id12472592_voclearn;charset=utf8', 'i
 $req = $db->prepare('SELECT ID, CODE, LANGUAGE FROM Language');
 $req->execute();
 
-$LangList = []; // key is lang code => value is the language
+$langList = []; // key is lang code => value is the language
 while($lang = $req->fetch()){
-	$LangList[$lang["ID"]] = ["code" => $lang["CODE"], "language" => $lang["LANGUAGE"]];
+	$langList[$lang["ID"]] = ["code" => $lang["CODE"], "language" => $lang["LANGUAGE"]];
 }
 
 
 // Get and shuffle the 20 words having the worse score 
-$reqWords = $db->prepare('SELECT ID, '.$user->learntLang.', '.$user->masteredLang.' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20 RAND()');
+$reqWords = $db->prepare('SELECT ID, '.$langList[$user->learntLang]["code"].', '.$langList[$user->masteredLang]["code"].' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20');
 $reqWords->execute();
-
+$words = [];
 while ($data = $reqWords->fetch()){
-	$words[$data["ID"]]= ["learntLang" => $data[$LangCodeList[$L_Lang]], "masteredLang" =>  $data[$LangCodeList[$M_Lang]], "score" => -1]; // -1 => no score otherwise score is between 0 and 1 
+	$words[$data["ID"]]= ["learntLang" => $data[$langList[$user->learntLang]["code"]], "masteredLang" =>  $data[$langList[$user->masteredLang]["code"]], "score" => -1]; // -1 => no score otherwise score is between 0 and 1 
 }
 // END MODEL
 ?>
@@ -110,10 +112,11 @@ while ($data = $reqWords->fetch()){
     
     <p id="dbg"></p>
     <p id="disp"></p>
-</body>
 <script>
 <?php
 echo 'var words ='.json_encode($words).";";
 ?>
 </script>
+<script src="vocLearn.js"></script>
+</body>
 </html>

@@ -5,7 +5,7 @@ class User{
 	public $firstname = 'Visitor';
 	public $lastname = '';
 	public $id = 0;
-	public $learntLang = 1; // Default language to learn is: Mongolian
+	public $learntLang = 3; // Default language to learn is: Mongolian
 	public $masteredLang = 2; // Default language mastered: English
 	public $reverseLangMode = False; // True: the answer language is the masterd language and the question is asked in the learnt language
 	
@@ -16,7 +16,7 @@ class User{
 		$this->id = $id;
 		$this->learntLang = $learntLang;
 		$this->masteredLang = $masteredLang;
-		$this->reverseLangMode = ;
+		$this->reverseLangMode = False;
 	}
 	
 	// Destructor 
@@ -24,8 +24,8 @@ class User{
 		$this->firstname = 'Visitor';
 		$this->lastname = '';
 		$this->id = 0;
-		$this->learntLang = 'mn';
-		$this->masteredLang = 'en';
+		$this->learntLang = 3;
+		$this->masteredLang = 2;
 		$this->reverseLangMode = False;
 	}
 	
@@ -39,10 +39,10 @@ class User{
 				
 		// fetch user info
 		
-		return new User()
+		return new User('Visitor', '', 0, 3, 2, False);
 	}
 	
 	public static function userVisitor(){
-		return new User();
+		return new User('Visitor', "", 0, 3, 2, False);
 	}
 }
