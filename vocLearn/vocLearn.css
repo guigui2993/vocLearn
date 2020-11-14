@@ -1,0 +1,18 @@
+button.MCQ{
+	width: 200px;
+	height: 200px;
+}
+
+.goodAnswer{
+	background-color: green;
+	border-style:inset;
+}
+
+.wrongAnswer{
+	background-color: red;
+	border-style:inset;
+}
+
+.HighlightGoodAnswer{
+	background-color: green;
+}

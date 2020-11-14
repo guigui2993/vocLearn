@@ -43,7 +43,6 @@ while($lang = $req->fetch()){
 	$langList[$lang["ID"]] = ["code" => $lang["CODE"], "language" => $lang["LANGUAGE"]];
 }
 
-
 // Get and shuffle the 20 words having the worse score 
 $reqWords = $db->prepare('SELECT ID, '.$langList[$user->learntLang]["code"].', '.$langList[$user->masteredLang]["code"].' FROM Words w LEFT JOIN Answer a ON w.ID = a.WORD ORDER BY SCORE LIMIT 20');
 $reqWords->execute();
@@ -109,12 +108,13 @@ while ($data = $reqWords->fetch()){
 </div>
 
 <div id="game">Game</div>
-    
+<div id="msg"></div>
+
     <p id="dbg"></p>
     <p id="disp"></p>
 <script>
 <?php
-echo 'var words ='.json_encode($words).";";
+echo 'var words ='.json_encode($words).";\n";
 ?>
 </script>
 <script src="vocLearn.js"></script>
